@@ -1,0 +1,45 @@
+{
+  "lang": "ar",
+
+  "nav_bar": {
+    "title": "بوابة إدارة الشكاوى ",
+    "viewComp": "مشاهدة الكل شكوى",
+    "creatComp": "إنشاء شكوى",
+    "signIn": "تسجيل الدخول",
+    "signOut": "تسجيل الخروج",
+    "allUsers": "عرض جميع المستخدمين"
+  },
+
+  "page_title": {
+    "login_page": "بوابة إدارة الشكاوى",
+    "register_page_admin": "استمارة تسجيل المسؤول",
+    "register_page_user": "استمارة تسجيل المستخدم",
+    "new_comp_page": "إنشاء شكوى",
+    "comp_details": "تفاصيل الشكوى"
+  },
+
+  "greeting": "مرحبا",
+
+  "not_reg": "غير مسجل ؟",
+
+  "table": {
+    "subject": "موضوعات",
+    "compType": "نوع الشكوى",
+    "compId": "معرف الشكوى",
+    "severity": "خطورة",
+    "status": "الحالة"
+  },
+
+  "table1": {
+    "users": "المستخدمون",
+    "complaints": "عرض الشكاوى",
+    "createComp": "إنشاء شكاوى",
+    "all": "الكل",
+    "id":"المعرف"
+  },
+
+  "reg": {
+    "admin": "إنشاء حساب المسؤول",
+    "user": "إنشاء حساب الزبون"
+  }
+}

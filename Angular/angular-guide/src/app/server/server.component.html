@@ -1,0 +1,6 @@
+<p [ngStyle]="{ backgroundColor: getColor() }">
+  Server with ID {{ serverId }} is {{ serverStatues }}
+  <button (click)="changeStatue()">
+    {{ serverStatues === "Offline" ? "on" : "off" }}
+  </button>
+</p>

@@ -1,0 +1,21 @@
+{
+  "name": "casl-hello-world",
+  "version": "1.0.0",
+  "description": "CASL helloworld example",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "keywords": [
+    "casl",
+    "helloworld"
+  ],
+  "author": "Sergii Stotskyi <sergiy.stotskiy@freaksidea.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@casl/ability": "^5.1.0"
+  },
+  "devDependencies": {
+    "typescript": "3.9.2"
+  }
+}

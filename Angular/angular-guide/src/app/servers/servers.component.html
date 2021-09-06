@@ -1,0 +1,22 @@
+<h3>Test1</h3>
+<hr />
+<app-server *ngFor="let server of servers"></app-server>
+<hr />
+<label>Server Name : {{ serverName }}</label>
+<input
+  type="text"
+  class="form-control"
+  [(ngModel)]="serverName"
+  [ngStyle]="{ backgroundColor: GetColor() }"
+/>
+<br />
+<button
+  class="btn btn-primary"
+  [disabled]="serverName === ''"
+  (click)="onCreateServer(serverName)"
+  [ngStyle]="{ backgroundColor: GetColor() }"
+>
+  Add Server
+</button>
+{{ allowNewServer ? "" : "Loading...." }}
+<p [innerText]="serverCreation"></p>

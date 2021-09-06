@@ -1,0 +1,45 @@
+{
+  "lang": "en",
+
+  "nav_bar": {
+    "title": "ShopSite",
+    "viewComp": "View My Products",
+    "creatComp": "Add New Products",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "allUsers": "View All users"
+  },
+
+  "page_title": {
+    "login_page": "ShopSite Login",
+    "register_page_admin": "Seller Registration Form",
+    "register_page_user": "User Registration Form",
+    "new_comp_page": "Add Product",
+    "comp_details": "Complaint Details"
+  },
+
+  "greeting": "Hello",
+
+  "not_reg": "Not registered ?",
+
+  "table": {
+    "subject": "SUBJECT",
+    "compType": "COMPLAINT TYPE",
+    "compId": "COMPLAINT ID",
+    "severity": "SEVERITY",
+    "status": "STATUS"
+  },
+
+  "table1": {
+    "users": "Users",
+    "complaints": "View complaints",
+    "createComp": "Create complaints",
+    "all": "All",
+    "id":"ID"
+  },
+
+  "reg": {
+    "admin": "Create Seller Account",
+    "user": " Create Customer Account"
+  }
+}

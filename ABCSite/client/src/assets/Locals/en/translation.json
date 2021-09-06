@@ -1,0 +1,45 @@
+{
+  "lang": "en",
+
+  "nav_bar": {
+    "title": "Complaints Management Portal",
+    "viewComp": "View All Complaint",
+    "creatComp": "Create Complaint",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "allUsers": "View All users"
+  },
+
+  "page_title": {
+    "login_page": "Complaints Management Portal",
+    "register_page_admin": "Admin Registration Form",
+    "register_page_user": "User Registration Form",
+    "new_comp_page": "Create Complaint",
+    "comp_details": "Complaint Details"
+  },
+
+  "greeting": "Hello",
+
+  "not_reg": "Not registered ?",
+
+  "table": {
+    "subject": "SUBJECT",
+    "compType": "COMPLAINT TYPE",
+    "compId": "COMPLAINT ID",
+    "severity": "SEVERITY",
+    "status": "STATUS"
+  },
+
+  "table1": {
+    "users": "Users",
+    "complaints": "View complaints",
+    "createComp": "Create complaints",
+    "all": "All",
+    "id":"ID"
+  },
+
+  "reg": {
+    "admin": "Create Admin Account",
+    "user": " Create Customer Account"
+  }
+}
