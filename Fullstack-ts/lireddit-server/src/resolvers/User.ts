@@ -13,12 +13,18 @@ import {
 import { MyContext } from "../types";
 import argon2 from "argon2";
 import { EntityManager } from "@mikro-orm/knex";
-import { COOKIE_NAME } from "../constants";
+import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
+import { mailer } from "../utils/Mailer";
+import { v4 } from "uuid";
 
 @InputType()
 class UserInput {
   @Field()
   username: string;
+ 
+  @Field()
+  email: string;
+
   @Field()
   password: string;
 }
@@ -42,13 +48,62 @@ class userRes {
 
 @Resolver()
 export class UserResolver {
+  @Mutation(() => userRes)
+  async changePass(
+    @Arg("token") token: string,
+    @Arg("NewPass") NewPass: string,
+    @Ctx() { redis, em }: MyContext
+  ): Promise<userRes> {
+    const key = FORGET_PASSWORD_PREFIX + token;
+    const userId = await redis.get(key);
+
+    if (!userId) {
+      return { err: [{ field: "token", msg: "token expired" }] };
+    }
+
+    const user = await em.findOne(User, { id: parseInt(userId) });
+
+    user!.password = await argon2.hash(NewPass);
+    await em.persistAndFlush(user!);
+
+    return { user };
+  }
+
+  @Mutation(() => Boolean)
+  async forgotPass(
+    @Arg("email") email: string,
+    @Ctx() { em, redis }: MyContext
+  ) {
+    const user = await em.findOne(User, { email });
+    if (!user) {
+      return true;
+    }
+    const token = v4();
+    await redis.set(
+      FORGET_PASSWORD_PREFIX + token,
+      user.id,
+      "ex",
+      1000 * 60 * 60 * 24 * 3
+    );
+
+    await mailer(
+      "fzxty3wsbbaba72w@ethereal.email",
+      `<a href="http://localhost:3000/change-password/${token}">Rest Password</a>`
+    );
+
+    return true;
+  }
+
   @Query(() => User, { nullable: true })
   async me(@Ctx() { req, em }: MyContext) {
+    console.log(req.session);
     if (!req.session.userId) {
+      console.log("No session");
       return null;
+    } else {
+      const user = await em.findOne(User, { id: +req.session.userId });
+      return user;
     }
-    const user = await em.findOne(User, { id: +req.session.userId });
-    return user;
   }
 
   @Query(() => [User])
@@ -74,10 +129,11 @@ export class UserResolver {
 
   @Mutation(() => userRes, { nullable: true })
   async login(
-    @Arg("options") option: UserInput,
+    @Arg("username") username: string,
+    @Arg("password") password: string,
     @Ctx() { em, req }: MyContext
   ): Promise<userRes> {
-    const query = await em.findOne(User, { username: option.username });
+    const query = await em.findOne(User, { username: username });
     if (!query) {
       return {
         err: [
@@ -88,7 +144,7 @@ export class UserResolver {
         ],
       };
     }
-    const valid = await argon2.verify(query.password, option.password);
+    const valid = await argon2.verify(query.password, password);
     if (!valid) {
       return {
         err: [
@@ -99,7 +155,10 @@ export class UserResolver {
         ],
       };
     }
+
     req.session.userId = query.id.toString();
+    console.log("session:", req.session);
+
     return {
       user: query,
     };
@@ -110,6 +169,16 @@ export class UserResolver {
     @Arg("options") option: UserInput,
     @Ctx() { em, req }: MyContext
   ): Promise<any | string> {
+    if (option.email.length <= 2) {
+      return {
+        err: [
+          {
+            field: "email",
+            msg: "Email is too short",
+          },
+        ],
+      };
+    }
     if (option.username.length <= 2) {
       return {
         err: [
@@ -159,6 +228,7 @@ export class UserResolver {
         .insert({
           username: option.username,
           password: option.password,
+          email: option.email,
           created_at: new Date(),
           updated_at: new Date(),
         })

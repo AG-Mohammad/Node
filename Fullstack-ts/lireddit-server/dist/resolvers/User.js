@@ -29,12 +29,18 @@ const User_1 = require("../entities/User");
 const type_graphql_1 = require("type-graphql");
 const argon2_1 = __importDefault(require("argon2"));
 const constants_1 = require("../constants");
+const Mailer_1 = require("../utils/Mailer");
+const uuid_1 = require("uuid");
 let UserInput = class UserInput {
 };
 __decorate([
     (0, type_graphql_1.Field)(),
     __metadata("design:type", String)
 ], UserInput.prototype, "username", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", String)
+], UserInput.prototype, "email", void 0);
 __decorate([
     (0, type_graphql_1.Field)(),
     __metadata("design:type", String)
@@ -69,13 +75,41 @@ userRes = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], userRes);
 let UserResolver = class UserResolver {
+    changePass(token, NewPass, { redis, em }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const userId = yield redis.get(constants_1.FORGET_PASSWORD_PREFIX + token);
+            if (!userId) {
+                return { err: [{ field: "token", msg: "token expired" }] };
+            }
+            const user = em.findOne(User_1.User, { id: parseInt(userId) });
+            user.password = NewPass;
+            yield em.persistAndFlush(user);
+            return { user };
+        });
+    }
+    forgotPass(email, { em, redis }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield em.findOne(User_1.User, { email });
+            if (!user) {
+                return true;
+            }
+            const token = (0, uuid_1.v4)();
+            yield redis.set(constants_1.FORGET_PASSWORD_PREFIX + token, user.id, "ex", 1000 * 60 * 60 * 24 * 3);
+            yield (0, Mailer_1.mailer)("fzxty3wsbbaba72w@ethereal.email", `<a href="http://localhost:3000/change-password/${token}">Rest Password</a>`);
+            return true;
+        });
+    }
     me({ req, em }) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log(req.session);
             if (!req.session.userId) {
+                console.log("No session");
                 return null;
             }
-            const user = yield em.findOne(User_1.User, { id: +req.session.userId });
-            return user;
+            else {
+                const user = yield em.findOne(User_1.User, { id: +req.session.userId });
+                return user;
+            }
         });
     }
     getUsers({ em }) {
@@ -87,9 +121,9 @@ let UserResolver = class UserResolver {
     getUser(username, { em }) {
         return em.findOne(User_1.User, { username });
     }
-    login(option, { em, req }) {
+    login(username, password, { em, req }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const query = yield em.findOne(User_1.User, { username: option.username });
+            const query = yield em.findOne(User_1.User, { username: username });
             if (!query) {
                 return {
                     err: [
@@ -100,7 +134,7 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
-            const valid = yield argon2_1.default.verify(query.password, option.password);
+            const valid = yield argon2_1.default.verify(query.password, password);
             if (!valid) {
                 return {
                     err: [
@@ -112,6 +146,7 @@ let UserResolver = class UserResolver {
                 };
             }
             req.session.userId = query.id.toString();
+            console.log("session:", req.session);
             return {
                 user: query,
             };
@@ -119,6 +154,16 @@ let UserResolver = class UserResolver {
     }
     createUser(option, { em, req }) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (option.email.length <= 2) {
+                return {
+                    err: [
+                        {
+                            field: "email",
+                            msg: "Email is too short",
+                        },
+                    ],
+                };
+            }
             if (option.username.length <= 2) {
                 return {
                     err: [
@@ -168,6 +213,7 @@ let UserResolver = class UserResolver {
                     .insert({
                     username: option.username,
                     password: option.password,
+                    email: option.email,
                     created_at: new Date(),
                     updated_at: new Date(),
                 })
@@ -229,6 +275,23 @@ let UserResolver = class UserResolver {
     }
 };
 __decorate([
+    (0, type_graphql_1.Mutation)(() => userRes),
+    __param(0, (0, type_graphql_1.Arg)("token")),
+    __param(1, (0, type_graphql_1.Arg)("NewPass")),
+    __param(2, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "changePass", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    __param(0, (0, type_graphql_1.Arg)("email")),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "forgotPass", null);
+__decorate([
     (0, type_graphql_1.Query)(() => User_1.User, { nullable: true }),
     __param(0, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
@@ -260,10 +323,11 @@ __decorate([
 ], UserResolver.prototype, "getUser", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => userRes, { nullable: true }),
-    __param(0, (0, type_graphql_1.Arg)("options")),
-    __param(1, (0, type_graphql_1.Ctx)()),
+    __param(0, (0, type_graphql_1.Arg)("username")),
+    __param(1, (0, type_graphql_1.Arg)("password")),
+    __param(2, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [UserInput, Object]),
+    __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "login", null);
 __decorate([

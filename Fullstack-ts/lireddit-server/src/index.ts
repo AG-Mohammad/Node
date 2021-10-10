@@ -11,26 +11,39 @@ import { UserResolver } from "./resolvers/User";
 import Redis from "ioredis";
 import session from "express-session";
 import connect from "connect-redis";
+import { createConnection } from "typeorm";
+import { Post } from "./entities/Post";
+import { User } from "./entities/User";
+
 //import { MyContext } from "./types";
 
 const main = async () => {
+  const conn = createConnection({
+    type: "postgres",
+    database: "lireddit2",
+    username: "postgres",
+    password: "admin",
+    logging: true,
+    synchronize: true,
+    entities: [Post, User],
+  });
   const orm = await MikroORM.init(microConfig);
   await orm.getMigrator().up();
 
   const app = express();
 
   const RedisStore = connect(session);
-  const redisClient = new Redis("127.0.0.1:6379");
+  const redis = new Redis();
   console.log("__prod__", __prod__);
   app.use(
     session({
       name: COOKIE_NAME,
-      secret: "keyboard cat",
-      store: new RedisStore({ client: redisClient }),
+      secret: "totsASecretShhh",
+      store: new RedisStore({ client: redis as any, disableTouch: true }),
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
         httpOnly: true,
-        sameSite: "lax",
+        sameSite: "strict",
         secure: __prod__,
       },
       saveUninitialized: false,
@@ -43,7 +56,7 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }) => ({ em: orm.em, req, res, session: req.session }),
+    context: ({ req, res }) => ({ em: orm.em, req, res, redis }),
   });
 
   await apolloServer.start();

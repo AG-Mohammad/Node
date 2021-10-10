@@ -30,16 +30,16 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     yield orm.getMigrator().up();
     const app = (0, express_1.default)();
     const RedisStore = (0, connect_redis_1.default)(express_session_1.default);
-    const redisClient = new ioredis_1.default("127.0.0.1:6379");
+    const redis = new ioredis_1.default();
     console.log("__prod__", constants_1.__prod__);
     app.use((0, express_session_1.default)({
         name: constants_1.COOKIE_NAME,
-        secret: "keyboard cat",
-        store: new RedisStore({ client: redisClient }),
+        secret: "totsASecretShhh",
+        store: new RedisStore({ client: redis, disableTouch: true }),
         cookie: {
             maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
             httpOnly: true,
-            sameSite: "lax",
+            sameSite: "strict",
             secure: constants_1.__prod__,
         },
         saveUninitialized: false,
@@ -50,7 +50,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
             resolvers: [hello_1.HelloResolver, Post_1.PostResolver, User_1.UserResolver],
             validate: false,
         }),
-        context: ({ req, res }) => ({ em: orm.em, req, res, session: req.session }),
+        context: ({ req, res }) => ({ em: orm.em, req, res, redis }),
     });
     yield apolloServer.start();
     apolloServer.applyMiddleware({

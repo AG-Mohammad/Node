@@ -7,6 +7,8 @@ import { Button } from "@chakra-ui/button";
 import { toErrorMap } from "../utils/toErrorMap";
 import { useRouter } from "next/dist/client/router";
 import { useLoginUserMutation } from "../generated/graphql";
+import { withUrqlClient } from "next-urql";
+import { UrqlClient } from "../utils/UrqlClient";
 
 const Login: React.FC<{}> = ({}) => {
   const router = useRouter();
@@ -34,15 +36,6 @@ const Login: React.FC<{}> = ({}) => {
                 required
               />
             </Box>
-            {/* <Box mt={4}>
-              <InputField
-                type="email"
-                name="email"
-                placeholder="Email"
-                label="Email"
-                required
-              />
-            </Box> */}
             <Box mt={4}>
               <InputField
                 type="password"
@@ -59,7 +52,7 @@ const Login: React.FC<{}> = ({}) => {
               isLoading={isSubmitting}
               disabled={isSubmitting}
             >
-              Register
+              Login
             </Button>
           </Form>
         )}
@@ -68,4 +61,4 @@ const Login: React.FC<{}> = ({}) => {
   );
 };
 
-export default Login;
+export default withUrqlClient(UrqlClient, { ssr: false })(Login);
